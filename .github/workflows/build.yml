@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*.*.*'  # Trigger on new version tags like v1.0.0, v1.1.2, etc.
+  workflow_dispatch:  # Allows manual triggering from the GitHub UI
 
 jobs:
   build:
@@ -21,7 +22,17 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git python3 python3-pip python3-setuptools python3-wheel base-devel
+          sudo apt-get install -y git python3 python3-pip python3-setuptools python3-wheel \
+                                  build-essential fakeroot dpkg-dev debhelper \
+                                  libffi-dev libssl-dev
+
+      - name: Install yay
+        run: |
+          sudo apt-get install -y git base-devel
+          git clone https://aur.archlinux.org/yay.git
+          cd yay
+          makepkg -si --noconfirm
+          sudo make install
 
       - name: Extract Version
         id: extract_version
