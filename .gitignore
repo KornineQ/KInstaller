@@ -15,3 +15,4 @@ src/
 *.tar.xz
 *.pkg.tar.xz
 *.logs
+build.sh
