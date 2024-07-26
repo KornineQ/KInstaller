@@ -1,6 +1,6 @@
-# Maintainer: Your Name <your.email@example.com>
+# Maintainer: KornineQ
 pkgname=KInstaller
-pkgver=1.0
+pkgver=1.0.0 
 pkgrel=1
 pkgdesc="An Arch Linux Package Assister"
 arch=('any')
