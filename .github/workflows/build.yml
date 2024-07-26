@@ -1,0 +1,51 @@
+name: Build and Publish AUR Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on new version tags like v1.0.0, v1.1.2, etc.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git python3 python3-pip python3-setuptools python3-wheel base-devel
+
+      - name: Extract Version
+        id: extract_version
+        run: echo "pkgver=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Build AUR Package
+        run: |
+          # Navigate to the directory with PKGBUILD
+          cd $GITHUB_WORKSPACE
+          
+          # Update PKGBUILD with the new version
+          sed -i "s/^pkgver=.*/pkgver=${{ env.pkgver }}/" PKGBUILD
+
+          # Build the package
+          makepkg -si --noconfirm
+
+      - name: Upload Package
+        uses: actions/upload-artifact@v3
+        with:
+          name: KInstaller
+          path: '*.pkg.tar.zst'
+
+      - name: Submit to AUR
+        run: |
+          aurpublish --api-url https://aur.archlinux.org --package *.pkg.tar.zst --api-key ${{ secrets.AUR_API_KEY }}
+        env:
+          AUR_API_KEY: ${{ secrets.AUR_API_KEY }}

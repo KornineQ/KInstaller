@@ -7,3 +7,10 @@ __pycache__/
 .vscode/
 .idea/
 kinstall-env/
+build/
+dist/
+*.egg-info/
+*.egg
+src/
+*.tar.xz
+*.pkg.tar.xz

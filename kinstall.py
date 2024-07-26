@@ -3,6 +3,7 @@ import sys
 from termcolor import colored
 import distro
 import re
+import requests
 
 arch_based_distros = [
     "Arch Linux", "Manjaro", "ArcoLinux", "Artix Linux", "EndeavourOS", 
@@ -22,6 +23,8 @@ messages = {
         "invalid_selection": "Invalid selection. Please try again.",
         "invalid_input": "Invalid input. Exiting.",
         "manjaro_warning": "You are using Manjaro. This script might cause issues on Manjaro.",
+        "up_to_date": "You are using the latest version.",
+        "outdated_version": "Your version is outdated and cannot be used. Please update to the latest version.",
     },
     "pl": {
         "not_arch": "Ten skrypt można uruchomić tylko na dystrybucji Linuksa opartej na Arch.",
@@ -80,6 +83,18 @@ def check_arch_based():
     dist = distro.name()
     return dist in arch_based_distros
 
+def version_compare(v1, v2):
+    v1_parts = list(map(int, v1.split('.')))
+    v2_parts = list(map(int, v2.split('.')))
+    
+    # Pad the shorter version with zeroes
+    while len(v1_parts) < len(v2_parts):
+        v1_parts.append(0)
+    while len(v2_parts) < len(v1_parts):
+        v2_parts.append(0)
+    
+    return (v1_parts > v2_parts) - (v1_parts < v2_parts)
+
 def run_command(command, timeout=60):
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
@@ -121,6 +136,22 @@ def search_and_select_package(package, lang):
         except ValueError:
             print(colored(get_message(lang, "invalid_input"), 'red'))
 
+def check_version():
+    try:
+        response = requests.get('https://raw.githubusercontent.com/KornineQ/KInstaller/master/ver.txt')
+        latest_version = response.text.strip()
+        current_version = '1.0.0'  # Replace with your current version
+
+        if version_compare(current_version, latest_version) < 0:
+            print(colored(get_message('en', 'outdated_version'), 'red'))
+            sys.exit(1)
+        elif version_compare(current_version, latest_version) > 0:
+            print(colored(f"Warning: Your version {current_version} is newer than the latest version {latest_version}. This is unusual.", 'yellow'))
+        else:
+            print(colored(get_message('en', 'up_to_date'), 'green'))
+    except requests.RequestException as e:
+        print(colored(f"Failed to check for updates: {str(e)}", 'red'))
+
 def kinstall(action, package, lang="pl"):
     if not check_arch_based():
         print(colored(get_message(lang, "not_arch"), 'red'))
@@ -157,6 +188,8 @@ def kinstall(action, package, lang="pl"):
         print(colored(f"{get_message(lang, 'error')}: Unknown action '{action}'", 'red'))
 
 if __name__ == "__main__":
+    check_version()  
+
     if len(sys.argv) < 3:
         print(colored("Usage: kinstall <action> <package> [language]", 'red'))
         sys.exit(1)
