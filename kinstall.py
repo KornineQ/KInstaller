@@ -140,7 +140,7 @@ def check_version():
     try:
         response = requests.get('https://raw.githubusercontent.com/KornineQ/KInstaller/master/ver.txt')
         latest_version = response.text.strip()
-        current_version = '1.0.0'  # Replace with your current version
+        current_version = '1.0.1"  
 
         if version_compare(current_version, latest_version) < 0:
             print(colored(get_message('en', 'outdated_version'), 'red'))
